@@ -76,7 +76,8 @@ class Agent(object):
             memory.sample(batch_size)
 
         values = self.__policy(state_batch.float()).gather(1, action_batch)
-        values_next = self.__target(next_batch.float()).max(1).values.detach()
+        action_next = self.__policy(next_batch.float()).max(1).indices
+        values_next = self.__target(next_batch.float()).gather(1, action_next.unsqueeze(1))
         expected = (self.__gamma * values_next.unsqueeze(1)) * \
             (1. - done_batch) + reward_batch
         loss = F.smooth_l1_loss(values, expected)
